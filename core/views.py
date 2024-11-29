@@ -54,7 +54,7 @@ class SignupView(APIView):
             user = serializer.save()
             user.verification_hash = hashlib.sha256(user.email.encode()).hexdigest()
             user.save()
-            verification_url = f"http://127.0.0.1:8000/api/verify-email/{user.verification_hash}"
+            verification_url = f"https://tambolipradhuman123.pythonanywhere.com/api/verify-email/{user.verification_hash}"
 
             send_mail(
                 'Email Verification',
@@ -77,7 +77,7 @@ class SignupView(APIView):
         #     "email": "lifewithlucky12@gmail.com",
         #     "password": "securepassword",
         #     "password2": "securepassword",
-        #     "role": "ops",           
+        #     "role": "ops",
         # }
 
 class VerifyEmailView(APIView):
@@ -94,7 +94,7 @@ class VerifyEmailView(APIView):
 class UploadFileView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure that the user is authenticated
     authentication_classes = [JWTAuthentication]  # Use JWTAuthentication
-    
+
     parser_classes = [MultiPartParser, FormParser]  # Add parsers
 
     def post(self, request):
@@ -113,7 +113,7 @@ class UploadFileView(APIView):
         if file_extension not in valid_extensions:
             return Response({"error": "Invalid file type. Only pptx, docx, and xlsx are allowed."}, status=status.HTTP_400_BAD_REQUEST)
 
-       
+
         file_instance = File(file=file, uploaded_by=user)
         file_instance.save()
 
@@ -130,17 +130,17 @@ class FileDownloadView(APIView):
             File.objects.get(id=file_id)
         except File.DoesNotExist:
             return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
-        
+
         # Encrypt the URL (for secure access)
         encrypted_url = coreUtils.encrypt_file_url(file_id)
-        download_url = f"http://127.0.0.1:8000/api/secure-download/{encrypted_url}/"
+        download_url = f"https://tambolipradhuman123.pythonanywhere.com/api/secure-download/{encrypted_url}/"
 
         return Response(
                 {
                     "message": "Success",
                     "download-link": download_url
                 },status=status.HTTP_200_OK)
-        
+
 
 class ListFilesView(APIView):
     def get(self, request):
@@ -151,13 +151,13 @@ class ListFilesView(APIView):
         if request.user.role != 'client':
             return Response({"error": "Access Denied", "message": "This resource is only accessible to client users."},
                             status=403)
-    
+
         # List all files uploaded by Ops users
         files = File.objects.all()
         serialized_files = FileSerializer(files, many=True)
-        
+
         return Response(serialized_files.data, status=status.HTTP_200_OK)
-    
+
 
 class SecureFileDownloadView(APIView):
     def get(self, request, encrypted_url):
@@ -169,11 +169,11 @@ class SecureFileDownloadView(APIView):
             if not request.user.is_authenticated :
                 return Response({"error": "Authentication Required", "message": "You must be logged in to access this resource.","details": "Include the token in the Authorization header in the format: 'Bearer <your_token>'."},
                                 status=403)
-            
+
             if request.user.role != 'client':
                 return Response({"error": "Access Denied", "message": "This resource is only accessible to client users."},
                                 status=403)
-            
+
             # Serve the file
             response = FileResponse(file_instance.file)
             response['Content-Disposition'] = f'attachment; filename="{file_instance.file.name}"'
@@ -182,4 +182,3 @@ class SecureFileDownloadView(APIView):
             return Response({"error": "File not found"}, status=404)
         except ValueError:
             return Response({"error": "Invalid or corrupted URL"}, status=400)
-    
