@@ -41,11 +41,7 @@ class LoginView(APIView):
                 return Response({"error": "Email is not verified."}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response({"error": "Invalid username or password."}, status=status.HTTP_401_UNAUTHORIZED)
-    # payload for login
-    # {
-    #     "username": "johndoe",
-    #     "password": "securepassword"
-    # }
+
 
 class SignupView(APIView):
     def post(self, request):
@@ -66,19 +62,12 @@ class SignupView(APIView):
             return Response(
                 {
                     "message": "User created successfully!",
-                    "verification_url": verification_url,
+                    "verification_hash": user.verification_hash,
                 },
                 status=status.HTTP_201_CREATED,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        # payload for signup
-        # {
-        #     "username": "johndoe",
-        #     "email": "lifewithlucky12@gmail.com",
-        #     "password": "securepassword",
-        #     "password2": "securepassword",
-        #     "role": "ops",
-        # }
+
 
 class VerifyEmailView(APIView):
     def get(self, request, encrypted_url):
@@ -133,12 +122,12 @@ class FileDownloadView(APIView):
 
         # Encrypt the URL (for secure access)
         encrypted_url = coreUtils.encrypt_file_url(file_id)
-        download_url = f"https://tambolipradhuman123.pythonanywhere.com/api/secure-download/{encrypted_url}/"
+
 
         return Response(
                 {
                     "message": "Success",
-                    "download-link": download_url
+                    "encrypted_url": encrypted_url
                 },status=status.HTTP_200_OK)
 
 
